@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Directo 制作路径 UI 原型</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111215;
+      --panel: #1b1d22;
+      --panel-2: #20232a;
+      --panel-3: #17191e;
+      --line: #333740;
+      --soft-line: #292d35;
+      --text: #f4f5f7;
+      --muted: #9ca3af;
+      --faint: #6f7785;
+      --green: #10c78a;
+      --green-2: #073c31;
+      --violet: #8c5cf7;
+      --amber: #f6b83f;
+      --red: #ef4444;
+      --blue: #38bdf8;
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: #555b66; }
+    .primary {
+      background: var(--green);
+      color: #06130f;
+      border-color: var(--green);
+      font-weight: 700;
+    }
+    .ghost { background: transparent; }
+    .pill {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .pill.on {
+      background: rgba(16,199,138,.14);
+      color: #5df2bf;
+      border-color: rgba(16,199,138,.55);
+    }
+
+    header {
+      height: 72px;
+      border-bottom: 1px solid var(--soft-line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(17,18,21,.95);
+      backdrop-filter: blur(10px);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 800; }
+    .logo {
+      width: 28px; height: 22px; border-radius: 6px;
+      background: linear-gradient(135deg, var(--green), #14e0ff);
+      position: relative;
+    }
+    .logo:after {
+      content: "";
+      position: absolute;
+      right: -8px; top: 3px;
+      border-left: 9px solid var(--green);
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+    }
+    nav { display: flex; gap: 18px; align-items: center; color: var(--muted); }
+    nav button {
+      border: 0;
+      background: transparent;
+      padding: 8px 4px;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+    }
+    nav button.active {
+      color: var(--text);
+      border-bottom-color: var(--green);
+    }
+    .top-actions { display: flex; align-items: center; gap: 12px; }
+    .balance {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 14px;
+      color: var(--muted);
+    }
+
+    .wrap { padding: 28px; max-width: 1740px; margin: 0 auto; }
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 0 0 14px; font-size: 20px; }
+    h3 { margin: 0; font-size: 16px; }
+    p { color: var(--muted); margin: 0; line-height: 1.6; }
+
+    .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 24px; }
+    .search, select, textarea, input {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      outline: none;
+    }
+    .search { width: 420px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .poster {
+      height: 150px;
+      background:
+        radial-gradient(circle at 22% 26%, rgba(16,199,138,.35), transparent 26%),
+        linear-gradient(135deg, #282d36, #111317);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,.7);
+      font-size: 42px;
+      font-weight: 800;
+    }
+    .poster.warm { background: linear-gradient(135deg, #69341e, #d46b25 45%, #15171a); }
+    .poster.purple { background: linear-gradient(135deg, #24233e, #7c5bd6 52%, #15171a); }
+    .poster.photo { background: linear-gradient(135deg, #243a3a, #b99561 48%, #101114); }
+    .card-body { padding: 16px; }
+    .meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      color: var(--faint);
+      font-size: 13px;
+    }
+    .progress {
+      height: 5px;
+      background: #3a3d45;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    .progress span { display: block; height: 100%; background: var(--green); }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.64);
+      z-index: 10;
+      padding: 24px;
+    }
+    .modal.show { display: flex; }
+    .dialog {
+      width: min(1100px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      background: #17191e;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 26px 80px rgba(0,0,0,.45);
+    }
+    .dialog-head {
+      padding: 22px 24px;
+      border-bottom: 1px solid var(--soft-line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dialog-body { padding: 24px; }
+    .dialog-foot {
+      padding: 18px 24px;
+      border-top: 1px solid var(--soft-line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .choice {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      min-height: 170px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .choice.active { border-color: var(--green); box-shadow: inset 0 0 0 1px rgba(16,199,138,.45); }
+    .choice b { font-size: 20px; }
+    .choice small { color: var(--faint); line-height: 1.6; }
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: var(--panel);
+    }
+    .step.on { color: #72f2c3; border-color: rgba(16,199,138,.6); background: rgba(16,199,138,.1); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+    .prep-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+    }
+    .section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .style-card {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin-top: 12px;
+      background: var(--panel-3);
+    }
+    .thumb {
+      height: 58px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #323948, #7a6147);
+    }
+    .asset-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: var(--radius);
+    }
+    .asset-table th, .asset-table td {
+      border-bottom: 1px solid var(--soft-line);
+      padding: 13px 10px;
+      text-align: left;
+      color: var(--muted);
+    }
+    .asset-table th { color: var(--faint); font-weight: 600; }
+    .asset-table td:first-child { color: var(--text); }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      color: var(--muted);
+      background: #15171b;
+    }
+    .tag.ok { color: #61f0bf; border-color: rgba(16,199,138,.5); background: rgba(16,199,138,.1); }
+    .tag.wait { color: #ffd37a; border-color: rgba(246,184,63,.45); background: rgba(246,184,63,.08); }
+    .tag.bad { color: #fda4af; border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.08); }
+    .mini-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mini-actions button { padding: 6px 9px; font-size: 12px; }
+
+    .workbench {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      border-top: 1px solid var(--soft-line);
+      min-height: calc(100vh - 73px);
+    }
+    aside {
+      border-right: 1px solid var(--soft-line);
+      padding: 20px;
+      overflow: auto;
+    }
+    .main-work { padding: 20px; overflow: auto; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .asset {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-3);
+      overflow: hidden;
+    }
+    .asset-img {
+      height: 92px;
+      background: linear-gradient(135deg, #44505f, #22252b);
+    }
+    .asset .card-body { padding: 10px; }
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 16px;
+    }
+    .reference-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .ref-box {
+      min-height: 150px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: var(--panel-3);
+    }
+    .prompt {
+      min-height: 160px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 16px;
+      line-height: 1.7;
+      color: #d6d9df;
+      margin-top: 14px;
+    }
+    .drawer-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: var(--panel);
+      margin-bottom: 12px;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .choice-grid, .prep-layout, .workbench, .split { grid-template-columns: 1fr; }
+      header { flex-wrap: wrap; height: auto; gap: 12px; padding: 16px; }
+      .wrap { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="logo"></span>Directo</div>
+    <nav>
+      <button class="active" data-view="scripts">剧本</button>
+      <button data-view="assets">资产库</button>
+      <button data-view="styles">风格库</button>
+      <button data-view="workbench">制作页</button>
+    </nav>
+    <div class="top-actions">
+      <span class="balance">金币 15,226.22</span>
+      <button class="primary" id="openCreate">＋ 新建项目</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="view active" id="scripts">
+      <div class="wrap">
+        <div class="page-head">
+          <div>
+            <h1>剧本 / 项目</h1>
+            <p>从这里创建项目。资产库和风格库仍是全局库，进入项目后会变成“项目资产”和“项目风格”。</p>
+          </div>
+          <button class="primary" id="openCreate2">＋ 新建项目</button>
+        </div>
+        <div class="toolbar">
+          <input class="search" placeholder="按项目名搜索" />
+          <select><option>全部状态</option><option>草稿</option><option>制作中</option><option>已完成</option></select>
+          <select><option>最近修改</option><option>最近创建</option></select>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <div class="poster warm">三</div>
+            <div class="card-body">
+              <h3>三国</h3>
+              <div class="progress"><span style="width: 18%"></span></div>
+              <p>0/3 分镜 · 5 集</p>
+              <div class="meta"><span>项目风格：真人电影感</span><span>资产 12</span></div>
+            </div>
+          </article>
+          <article class="card">
+            <div class="poster purple">张</div>
+            <div class="card-body">
+              <h3>张三</h3>
+              <div class="progress"><span style="width: 8%"></span></div>
+              <p>0/6 分镜 · 1 集</p>
+              <div class="meta"><span>待补资产 4</span><span>风格未确认</span></div>
+            </div>
+          </article>
+          <article class="card">
+            <div class="poster photo">医</div>
+            <div class="card-body">
+              <h3>怪医测试</h3>
+              <div class="progress"><span style="width: 100%"></span></div>
+              <p>1/1 分镜 · 已完成</p>
+              <div class="meta"><span>Seedance 2.0</span><span>资产 15</span></div>
+            </div>
+          </article>
+          <article class="card">
+            <div class="poster">＋</div>
+            <div class="card-body">
+              <h3>空白制作项目</h3>
+              <p>已有剧本、分镜、美术设定时，直接进入制作页补充项目资产。</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="assets">
+      <div class="wrap">
+        <div class="page-head">
+          <div>
+            <h1>资产库</h1>
+            <p>全局可复用资产。导入项目后，会成为该项目的“项目资产”。</p>
+          </div>
+          <div class="top-actions">
+            <button>新建文件夹</button>
+            <button class="primary">＋ 新增资产</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <button class="pill on">角色</button><button class="pill">场景</button><button class="pill">道具</button><button class="pill">视频素材</button><button class="pill">音频素材</button>
+          <input class="search" placeholder="按名称搜索全部文件夹" />
+        </div>
+        <div class="section">
+          <table class="asset-table">
+            <tr><th>分组</th><th>内容</th><th>用途</th><th>操作</th></tr>
+            <tr><td>怪医</td><td>9 个角色，3 个场景，2 个道具</td><td><span class="tag ok">可复用</span></td><td><button>导入到项目</button></td></tr>
+            <tr><td>三国</td><td>1 个子文件夹</td><td><span class="tag">历史题材</span></td><td><button>导入到项目</button></td></tr>
+            <tr><td>穿成炮灰女配后</td><td>4 个角色</td><td><span class="tag wait">待整理</span></td><td><button>导入到项目</button></td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="styles">
+      <div class="wrap">
+        <div class="page-head">
+          <div>
+            <h1>风格库</h1>
+            <p>全局风格包。用于项目开始前固定画风、镜头语言、视频动态和负向限制。</p>
+          </div>
+          <button class="primary">＋ 新建风格包</button>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <div class="poster photo">真</div>
+            <div class="card-body">
+              <h3>真人电影感</h3>
+              <p>画风、光影、镜头、负向限制已配置</p>
+              <div class="meta"><span class="tag ok">8/9 模块</span><span>Seedream 4.5</span></div>
+            </div>
+          </article>
+          <article class="card">
+            <div class="poster purple">3D</div>
+            <div class="card-body">
+              <h3>三维人像风</h3>
+              <p>人物一致性、场景质感、画质增强</p>
+              <div class="meta"><span class="tag ok">7/9 模块</span><span>常用</span></div>
+            </div>
+          </article>
+          <article class="card">
+            <div class="poster warm">漫</div>
+            <div class="card-body">
+              <h3>国漫热血都市异能风</h3>
+              <p>动作、特效、城市夜景、镜头动态</p>
+              <div class="meta"><span class="tag wait">5/9 模块</span></div>
+            </div>
+          </article>
+        </div>
+        <div class="section" style="margin-top:18px">
+          <h2>风格包建议模块</h2>
+          <div class="toolbar" style="flex-wrap:wrap;margin:0">
+            <span class="tag ok">基础画风</span><span class="tag ok">人物一致性</span><span class="tag ok">场景质感</span><span class="tag ok">镜头语言</span><span class="tag ok">光影色调</span><span class="tag ok">视频动态</span><span class="tag ok">质量增强</span><span class="tag ok">负向限制</span><span class="tag">项目补充</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="workbench">
+      <div class="workbench">
+        <aside>
+          <h2>项目资产</h2>
+          <p>当前项目可用资产。需要全局素材时，从资产库导入。</p>
+          <div class="toolbar" style="margin-top:16px; flex-wrap:wrap">
+            <button class="primary">＋ 新增资产</button>
+            <button>从资产库导入</button>
+          </div>
+          <div class="tabs">
+            <button class="pill on">全部</button><button class="pill">角色</button><button class="pill">场景</button><button class="pill">道具</button>
+          </div>
+          <div class="asset-grid">
+            <div class="asset"><div class="asset-img"></div><div class="card-body"><b>赵步理</b><p>角色 · 已审核</p><button class="pill on">用于当前分镜</button></div></div>
+            <div class="asset"><div class="asset-img"></div><div class="card-body"><b>医院值班室</b><p>场景 · 已审核</p><button class="pill on">已引用</button></div></div>
+            <div class="asset"><div class="asset-img"></div><div class="card-body"><b>古书</b><p>道具 · 已审核</p><button class="pill">用于当前分镜</button></div></div>
+            <div class="asset"><div class="asset-img"></div><div class="card-body"><b>心跳音效</b><p>音频 · 可用</p><button class="pill">用于当前分镜</button></div></div>
+          </div>
+        </aside>
+        <div class="main-work">
+          <div class="page-head">
+            <div>
+              <h1>怪医 · 分镜视频生成</h1>
+              <p>当前项目风格：真人电影感 · 可更换、查看或复制固定提示词</p>
+            </div>
+            <div class="top-actions">
+              <button>查看风格词</button>
+              <button>更换风格</button>
+              <button class="primary">生成</button>
+            </div>
+          </div>
+          <div class="flow">
+            <span class="step on"><span class="dot"></span>剧本拆解</span>
+            <span class="step on"><span class="dot"></span>项目准备</span>
+            <span class="step on"><span class="dot"></span>分镜制作</span>
+            <span class="step"><span class="dot"></span>导出成片</span>
+          </div>
+          <div class="split">
+            <div>
+              <div class="section">
+                <h2>当前分镜引用</h2>
+                <div class="reference-grid">
+                  <div class="ref-box"><h3>角色引用</h3><p>@赵步理</p><p>@江河</p></div>
+                  <div class="ref-box"><h3>场景引用</h3><p>@医院值班室</p></div>
+                  <div class="ref-box"><h3>道具引用</h3><p>@古书</p></div>
+                </div>
+                <div class="prompt">@赵步理 躺在 @医院值班室 值班桌上熟睡，嘴角挂着口水，手边放着泛黄 @古书。真人写实风格，电影级光影，人物动作自然，镜头轻微推进。</div>
+              </div>
+              <div class="section" style="margin-top:16px">
+                <h2>本分镜生成记录</h2>
+                <p>模型：豆包 Seedance 2.0 Fast · 参考图 3 · 费用 ¥2.15 · 已完成</p>
+              </div>
+            </div>
+            <div>
+              <div class="drawer-card">
+                <h3>项目风格</h3>
+                <p>真人电影感</p>
+                <div class="mini-actions" style="margin-top:10px"><button>复制提示词</button><button>应用到全部分镜</button></div>
+              </div>
+              <div class="drawer-card">
+                <h3>缺口提醒</h3>
+                <p>本集还有 2 个角色、1 个场景未补齐。</p>
+                <div class="mini-actions" style="margin-top:10px"><button>去补充</button><button>稍后处理</button></div>
+              </div>
+              <div class="drawer-card">
+                <h3>固定提示词模块</h3>
+                <p>基础画风、人物一致性、镜头语言、视频动态、负向限制已自动拼接。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="createModal" aria-hidden="true">
+    <div class="dialog">
+      <div class="dialog-head">
+        <div>
+          <h2>新建项目</h2>
+          <p>三个入口保留，只把后续路径接清楚。</p>
+        </div>
+        <button class="ghost" id="closeCreate">✕</button>
+      </div>
+      <div class="dialog-body">
+        <div class="flow">
+          <span class="step on"><span class="dot"></span>选择入口</span>
+          <span class="step"><span class="dot"></span>项目风格</span>
+          <span class="step"><span class="dot"></span>项目资产</span>
+          <span class="step"><span class="dot"></span>进入制作</span>
+        </div>
+        <div class="choice-grid" id="choices">
+          <button class="choice active" data-mode="smart">
+            <b>智能拆解项目</b>
+            <p>输入或上传剧本，自动提取分镜、角色、场景、道具。</p>
+            <small>适合只有剧本、希望系统先规划制作结构。</small>
+          </button>
+          <button class="choice" data-mode="blank">
+            <b>空白制作项目</b>
+            <p>已有剧本、分镜、美术设定，直接创建项目进入制作。</p>
+            <small>适合专业团队或已有完整前期设定。</small>
+          </button>
+          <button class="choice" data-mode="quick">
+            <b>快速生成项目</b>
+            <p>输入短剧本，选择风格，一键批量生成图片或视频。</p>
+            <small>适合快速试片和效果验证。</small>
+          </button>
+        </div>
+
+        <div class="prep-layout" style="margin-top:18px">
+          <div class="section">
+            <h2>项目风格</h2>
+            <p>从风格库选择一个风格包，后续生成自动拼接固定提示词。</p>
+            <div class="style-card">
+              <div class="thumb"></div>
+              <div><h3>真人电影感</h3><p>基础画风、光影、镜头、负向限制</p></div>
+            </div>
+            <div class="style-card">
+              <div class="thumb" style="background:linear-gradient(135deg,#443269,#263142)"></div>
+              <div><h3>三维人像风</h3><p>人物一致性、场景质感、质量增强</p></div>
+            </div>
+            <button style="margin-top:14px">稍后设置</button>
+          </div>
+          <div class="section">
+            <h2>项目资产准备</h2>
+            <p style="margin-bottom:14px">智能拆解会先生成资产清单；空白项目可手动新增或从资产库导入。</p>
+            <table class="asset-table">
+              <tr><th>类型</th><th>资产</th><th>来源</th><th>状态</th><th>操作</th></tr>
+              <tr><td>角色</td><td>赵步理</td><td>剧本解析</td><td><span class="tag wait">待补充</span></td><td><div class="mini-actions"><button>生成</button><button>上传</button><button>从资产库导入</button></div></td></tr>
+              <tr><td>场景</td><td>医院值班室</td><td>剧本解析</td><td><span class="tag ok">已导入</span></td><td><button>替换</button></td></tr>
+              <tr><td>道具</td><td>古书</td><td>剧本解析</td><td><span class="tag wait">待补充</span></td><td><div class="mini-actions"><button>生成</button><button>从资产库导入</button></div></td></tr>
+              <tr><td>音频</td><td>心跳音效</td><td>手动添加</td><td><span class="tag">稍后补充</span></td><td><button>上传</button></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <p>进入制作后仍可继续新增项目资产、从资产库导入、更换项目风格。</p>
+        <div class="top-actions">
+          <button id="closeCreate2">取消</button>
+          <button class="primary" data-jump="workbench">进入制作页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const views = document.querySelectorAll('.view');
+    const navs = document.querySelectorAll('nav button, [data-jump]');
+    const modal = document.querySelector('#createModal');
+    const openBtns = [document.querySelector('#openCreate'), document.querySelector('#openCreate2')];
+    const closeBtns = [document.querySelector('#closeCreate'), document.querySelector('#closeCreate2')];
+
+    function showView(id) {
+      views.forEach(v => v.classList.toggle('active', v.id === id));
+      document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === id));
+      modal.classList.remove('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    navs.forEach(btn => btn.addEventListener('click', () => {
+      const id = btn.dataset.view || btn.dataset.jump;
+      if (id) showView(id);
+    }));
+    openBtns.forEach(btn => btn.addEventListener('click', () => modal.classList.add('show')));
+    closeBtns.forEach(btn => btn.addEventListener('click', () => modal.classList.remove('show')));
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('show'); });
+
+    document.querySelectorAll('.choice').forEach(choice => {
+      choice.addEventListener('click', () => {
+        document.querySelectorAll('.choice').forEach(c => c.classList.remove('active'));
+        choice.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

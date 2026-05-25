@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Directo UI 汇总</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#101114;
+      --bar:#14161b;
+      --line:#2b3038;
+      --text:#f4f6f8;
+      --muted:#9da5b2;
+      --green:#10c78a;
+      --greenSoft:rgba(16,199,138,.12);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
+    header {
+      height:58px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      padding:0 22px;
+      background:var(--bar);
+      border-bottom:1px solid var(--line);
+    }
+    .brand { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:850; white-space:nowrap; }
+    .logo { width:24px; height:18px; border-radius:5px; background:linear-gradient(135deg,#10c78a,#22d3ee); position:relative; }
+    .logo:after { content:""; position:absolute; right:-7px; top:2px; border-left:8px solid #10c78a; border-top:7px solid transparent; border-bottom:7px solid transparent; }
+    nav { display:flex; gap:4px; align-items:center; margin-right:auto; }
+    button, a {
+      font:inherit;
+      color:var(--muted);
+      border:1px solid transparent;
+      background:transparent;
+      border-radius:8px;
+      padding:9px 12px;
+      cursor:pointer;
+      text-decoration:none;
+      white-space:nowrap;
+    }
+    button.active {
+      color:#68efc0;
+      background:var(--greenSoft);
+      border-color:rgba(16,199,138,.45);
+    }
+    a {
+      border-color:var(--line);
+      background:#1c2027;
+      color:var(--text);
+    }
+    .hint { color:var(--muted); font-size:13px; white-space:nowrap; }
+    iframe {
+      width:100vw;
+      height:calc(100vh - 58px);
+      border:0;
+      display:block;
+      background:#0c0d10;
+    }
+    @media (max-width: 760px) {
+      .brand,.hint { display:none; }
+      header { padding:0 10px; overflow:auto; }
+      nav { margin-right:0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="logo"></span><span>Directo UI 汇总</span></div>
+    <nav>
+      <button class="active" data-page="script">剧本</button>
+      <button data-page="style">风格库</button>
+      <button data-page="asset">资产库</button>
+      <button data-page="production">制作页</button>
+    </nav>
+    <span class="hint" id="hint">当前：剧本路径</span>
+    <a id="openNew" href="directo-production-path-ui.html" target="_blank">新窗口打开</a>
+  </header>
+  <iframe id="frame" src="directo-production-path-ui.html"></iframe>
+
+  <script>
+    const pages = {
+      script: {
+        label: "剧本路径",
+        url: "directo-production-path-ui.html"
+      },
+      style: {
+        label: "风格库",
+        url: "directo-prompt-library-from-doc-ui.html"
+      },
+      asset: {
+        label: "资产库",
+        url: "directo-asset-conservative-ui.html"
+      },
+      production: {
+        label: "制作页",
+        url: "directo-script-production-conservative-ui.html"
+      }
+    };
+
+    function setPage(key) {
+      const page = pages[key];
+      if (!page) return;
+      document.getElementById("frame").src = page.url;
+      document.getElementById("openNew").href = page.url;
+      document.getElementById("hint").textContent = "当前：" + page.label;
+      document.querySelectorAll("nav button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.page === key);
+      });
+    }
+
+    document.querySelectorAll("nav button").forEach(btn => {
+      btn.addEventListener("click", () => setPage(btn.dataset.page));
+    });
+  </script>
+</body>
+</html>

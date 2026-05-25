@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Directo 剧本制作页保守改版 UI</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#0f1013; --panel:#1a1c21; --panel2:#202329; --panel3:#15171b;
+      --line:#343842; --soft:#292d35; --text:#f4f6f8; --muted:#9da5b2; --faint:#727b88;
+      --green:#10c78a; --greenSoft:rgba(16,199,138,.12); --amber:#f6b83f; --red:#ef4444; --blue:#38bdf8;
+      --radius:8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); }
+    button,input,select,textarea { font:inherit; color:inherit; }
+    button { border:1px solid var(--line); background:var(--panel2); border-radius:var(--radius); padding:9px 12px; cursor:pointer; }
+    button:hover { border-color:#59616d; }
+    .primary { background:var(--green); border-color:var(--green); color:#06130f; font-weight:850; }
+    .soft { background:var(--greenSoft); border-color:rgba(16,199,138,.45); color:#68efc0; }
+    .ghost { background:transparent; }
+    .icon-btn { width:38px; height:38px; display:grid; place-items:center; padding:0; }
+    header { height:62px; border-bottom:1px solid var(--soft); display:flex; align-items:center; background:#0c0d10; position:sticky; top:0; z-index:10; }
+    .back { width:54px; display:grid; place-items:center; color:var(--muted); font-size:24px; }
+    .project { padding:0 16px 0 0; border-right:1px solid var(--soft); display:flex; align-items:center; gap:10px; min-width:250px; }
+    .mode { display:flex; gap:7px; padding:0 16px; border-right:1px solid var(--soft); }
+    .mode span { border:1px solid var(--line); padding:8px 12px; border-radius:999px; color:var(--muted); }
+    .mode .on { color:#68efc0; background:var(--greenSoft); border-color:rgba(16,199,138,.5); }
+    nav { display:flex; align-items:center; gap:0; height:100%; }
+    nav button { height:100%; border:0; border-right:1px solid var(--soft); border-radius:0; padding:0 24px; color:var(--muted); background:transparent; }
+    nav button.active { color:#68efc0; border-bottom:2px solid var(--green); background:#111318; }
+    .top-note { margin-left:auto; margin-right:18px; color:var(--muted); font-size:13px; }
+    .wrap { display:grid; grid-template-columns:420px 1fr; min-height:calc(100vh - 62px); }
+    aside { border-right:1px solid var(--soft); background:#0d0e11; height:calc(100vh - 62px); overflow:auto; }
+    main { height:calc(100vh - 62px); overflow:auto; padding:16px 18px 28px; }
+    .side-section { padding:16px 20px; border-bottom:1px solid var(--soft); }
+    h1,h2,h3,p { margin:0; }
+    h2 { font-size:18px; }
+    h3 { font-size:15px; }
+    p { color:var(--muted); line-height:1.55; }
+    .label { display:block; color:var(--text); font-weight:760; margin-bottom:10px; }
+    .required { color:#ff7979; }
+    select,input,textarea { width:100%; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:12px 13px; outline:none; }
+    .select-with-thumb { display:grid; grid-template-columns:64px 1fr 26px; gap:12px; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; }
+    .mini-thumb { width:52px; height:36px; border-radius:6px; background:linear-gradient(135deg,#5ba9ff,#e9f5ff); }
+    .arrow { color:var(--muted); font-size:18px; }
+    .desc { font-size:16px; color:#dbe1e8; line-height:1.7; }
+    .asset-box { border:1px solid var(--line); border-radius:var(--radius); background:var(--panel3); padding:14px; }
+    .asset-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; }
+    .tabs { display:flex; gap:7px; margin-bottom:12px; }
+    .tab { flex:1; text-align:center; border:1px solid var(--line); border-radius:var(--radius); padding:8px 6px; color:var(--muted); font-size:12px; }
+    .tab.on { color:#68efc0; background:var(--greenSoft); border-color:rgba(16,199,138,.45); }
+    .filters { display:flex; gap:7px; flex-wrap:wrap; margin:10px 0; }
+    .pill { display:inline-flex; border:1px solid var(--line); background:#13151a; color:var(--muted); border-radius:999px; padding:6px 9px; font-size:12px; line-height:1; }
+    .pill.on { color:#65efbf; background:var(--greenSoft); border-color:rgba(16,199,138,.45); }
+    .asset-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; max-height:360px; overflow:auto; padding-right:4px; }
+    .asset-card { border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); overflow:hidden; }
+    .asset-img { height:90px; background:linear-gradient(135deg,#303846,#16191f); position:relative; }
+    .asset-img.role { background:radial-gradient(circle at 52% 28%,#e3c1a0 0 16%,transparent 17%),linear-gradient(135deg,#3e4756,#171a20); }
+    .asset-img.scene { background:radial-gradient(circle at 64% 34%,#78b7ff 0 18%,transparent 19%),linear-gradient(135deg,#263f3a,#15171d); }
+    .asset-img.prop { background:radial-gradient(circle at 50% 43%,#ffd36a 0 18%,transparent 19%),linear-gradient(135deg,#443529,#15171d); }
+    .asset-img.video { background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.38) 0 16%,transparent 17%),linear-gradient(135deg,#243b5a,#15171d); }
+    .asset-img.audio { background:linear-gradient(90deg,transparent 0 15%,rgba(56,189,248,.45) 16% 20%,transparent 21% 30%,rgba(56,189,248,.7) 31% 38%,transparent 39% 48%,rgba(56,189,248,.35) 49% 54%,transparent 55%),linear-gradient(135deg,#1f3441,#15171d); }
+    .delete { position:absolute; top:7px; left:7px; width:28px; height:28px; border-radius:999px; display:grid; place-items:center; background:rgba(239,68,68,.7); color:#fff; }
+    .asset-type { position:absolute; right:7px; top:7px; border-radius:999px; background:rgba(0,0,0,.5); color:#dce5ef; padding:4px 7px; font-size:11px; }
+    .asset-info { padding:9px; font-size:13px; }
+    .asset-info small { color:var(--muted); display:block; margin-top:4px; }
+    .cert { margin-top:8px; width:100%; padding:7px 8px; font-size:12px; }
+    .current-preview { border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; background:var(--panel3); }
+    .preview-img { height:210px; background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.5)),radial-gradient(circle at 50% 36%,#e4c39e 0 16%,transparent 17%),linear-gradient(135deg,#34445a,#15171c); display:grid; place-items:center; }
+    .play { width:68px; height:68px; border-radius:999px; display:grid; place-items:center; background:rgba(255,255,255,.18); font-size:30px; }
+    .panel { border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); overflow:hidden; margin-bottom:14px; }
+    .panel-head { padding:14px 16px; border-bottom:1px solid var(--soft); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .panel-body { padding:14px 16px; }
+    .input-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px; }
+    .upload-box { border:1px solid var(--line); border-radius:var(--radius); padding:12px; min-height:102px; background:var(--panel3); }
+    .upload-box .limit { float:right; color:var(--faint); font-size:12px; }
+    .dash { display:inline-flex; border:1px dashed var(--line); border-radius:8px; padding:10px 13px; margin-top:10px; color:#cdd5df; }
+    .prompt { height:210px; resize:none; line-height:1.6; font-size:15px; }
+    .control-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:12px; border-top:1px solid var(--soft); }
+    .control-left,.control-right { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .compact { width:auto; min-width:110px; padding:10px 12px; }
+    .model-extra { border:1px solid var(--line); border-radius:var(--radius); background:var(--panel3); padding:12px; margin-top:12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .range { width:90px; height:4px; background:#414650; border-radius:999px; position:relative; }
+    .range:before { content:""; width:28px; height:20px; border-radius:999px; background:#fff; position:absolute; left:18px; top:-8px; }
+    .records-head { display:flex; justify-content:space-between; align-items:center; margin:22px 0 12px; }
+    .view-switch { display:flex; gap:6px; border:1px solid var(--line); border-radius:999px; padding:3px; }
+    .view-switch button { border:0; border-radius:999px; padding:7px 10px; color:var(--muted); background:transparent; }
+    .view-switch button.on { color:#07130f; background:var(--green); font-weight:800; }
+    .record-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .record { border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); overflow:hidden; }
+    .video-thumb { aspect-ratio:16 / 9; background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.58)),radial-gradient(circle at 48% 34%,#a8d7ff 0 18%,transparent 19%),linear-gradient(135deg,#32445b,#12151a); position:relative; }
+    .video-thumb.two { background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.58)),radial-gradient(circle at 42% 35%,#e0c098 0 16%,transparent 17%),linear-gradient(135deg,#4a3f36,#15171c); }
+    .video-thumb.three { background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.58)),radial-gradient(circle at 62% 35%,#54e2bc 0 16%,transparent 17%),linear-gradient(135deg,#244038,#15171c); }
+    .video-thumb .play { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:52px; height:52px; font-size:22px; }
+    .check { position:absolute; right:10px; top:10px; width:28px; height:28px; border-radius:999px; display:grid; place-items:center; background:var(--green); color:#08130f; font-weight:900; }
+    .record-body { padding:12px; }
+    .meta { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+    .meta span { border-radius:6px; background:#262a31; color:var(--muted); padding:5px 7px; font-size:12px; }
+    .record-actions { display:flex; gap:8px; flex-wrap:wrap; border-top:1px solid var(--soft); padding-top:10px; }
+    .record-actions button { padding:7px 9px; font-size:12px; }
+    .post-actions { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 10px; }
+    .post-action { border:1px solid rgba(56,189,248,.38); background:rgba(56,189,248,.08); color:#b8eaff; border-radius:7px; padding:6px 8px; font-size:12px; }
+    .post-action.done { border-color:rgba(16,199,138,.45); background:var(--greenSoft); color:#75efc4; }
+    .post-action.disabled { opacity:.55; }
+    .source-link { border-color:rgba(99,102,241,.55); background:rgba(99,102,241,.1); color:#bcc7ff; }
+    .modal { position:fixed; inset:0; background:rgba(0,0,0,.64); display:none; align-items:center; justify-content:center; z-index:30; padding:24px; }
+    .modal.show { display:flex; }
+    .dialog { width:min(1120px, 94vw); max-height:88vh; overflow:auto; background:#17191e; border:1px solid var(--line); border-radius:12px; box-shadow:0 28px 80px rgba(0,0,0,.48); }
+    .dialog-head { padding:20px 22px; border-bottom:1px solid var(--soft); display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .dialog-body { display:grid; grid-template-columns:260px 1fr; gap:0; min-height:560px; }
+    .prompt-nav { border-right:1px solid var(--soft); padding:16px; background:#101217; }
+    .prompt-nav button { width:100%; text-align:left; margin-bottom:8px; color:var(--muted); }
+    .prompt-nav button.on { color:#68efc0; background:var(--greenSoft); border-color:rgba(16,199,138,.45); }
+    .prompt-main { padding:16px; }
+    .selected-bar { border:1px solid rgba(16,199,138,.35); background:var(--greenSoft); border-radius:var(--radius); padding:12px; margin-bottom:14px; }
+    .selected-tags { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .prompt-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .prompt-card { border:1px solid var(--line); background:var(--panel); border-radius:var(--radius); padding:12px; min-height:126px; cursor:pointer; }
+    .prompt-card.on { border-color:rgba(16,199,138,.7); box-shadow:0 0 0 1px rgba(16,199,138,.22) inset; background:#18251f; }
+    .prompt-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .checkmark { width:22px; height:22px; border-radius:999px; border:1px solid var(--line); display:grid; place-items:center; color:transparent; }
+    .prompt-card.on .checkmark { color:#06130f; background:var(--green); border-color:var(--green); font-weight:900; }
+    .dialog-foot { padding:16px 22px; border-top:1px solid var(--soft); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .append-mode { display:flex; gap:8px; align-items:center; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+    .asset-generate-strip { border:1px solid var(--line); background:var(--panel3); border-radius:var(--radius); padding:12px; margin-bottom:12px; }
+    .asset-generate-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+    .asset-generate-actions button { padding:9px 8px; font-size:13px; }
+    @media (max-width: 1280px) {
+      .wrap { grid-template-columns:360px 1fr; }
+      .record-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .input-grid { grid-template-columns:1fr; }
+    }
+    @media (max-width: 860px) {
+      .wrap { grid-template-columns:1fr; }
+      aside, main { height:auto; }
+      .record-grid { grid-template-columns:1fr; }
+      nav { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="back">‹</div>
+    <div class="project">
+      <b>小丑牌</b>
+      <span class="pill">剧本已解析</span>
+    </div>
+    <div class="mode"><span>标准</span><span class="on">Seedance 2.0</span></div>
+    <nav>
+      <button>资产生成</button>
+      <button>分镜图生成</button>
+      <button class="active">分镜视频生成</button>
+    </nav>
+    <div class="top-note">第 1 集 / 分镜 1 · 项目风格：国漫热血·都市异能风</div>
+  </header>
+
+  <div class="wrap">
+    <aside>
+      <section class="side-section">
+        <label class="label">选择集数 <span class="required">*</span></label>
+        <select>
+          <option>第一集</option>
+          <option>第二集</option>
+          <option>第三集</option>
+        </select>
+      </section>
+
+      <section class="side-section">
+        <label class="label">选择分镜 <span class="required">*</span></label>
+        <div class="select-with-thumb">
+          <div class="mini-thumb"></div>
+          <div><b>分镜 1</b><p style="font-size:13px;">日式动画风格，蓝天，穿过云</p></div>
+          <span class="arrow">⌄</span>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <label class="label">画面描述</label>
+        <p class="desc">日式动画风格，蓝天，白云，低饱和度。镜头往前移，穿过云。</p>
+      </section>
+
+      <section class="side-section">
+        <div class="asset-box">
+          <div class="asset-head">
+            <div>
+              <h2>素材面板</h2>
+              <p style="font-size:13px;">本项目所有图片、视频、音频素材均可调用</p>
+            </div>
+            <button class="primary">上传资产</button>
+          </div>
+          <div class="tabs">
+            <div class="tab on">项目资产</div>
+            <div class="tab">从资产库</div>
+            <div class="tab">最近使用</div>
+          </div>
+          <input placeholder="搜索本项目素材" />
+          <div class="filters">
+            <span class="pill on">全部</span><span class="pill">角色</span><span class="pill">场景</span><span class="pill">道具</span><span class="pill">视频</span><span class="pill">音频</span>
+          </div>
+          <p style="font-size:12px; margin-bottom:10px;">上传到项目后的素材会进入“项目资产”；勾选沉淀后可同步到资产库，供其他项目复用。</p>
+          <div class="asset-grid">
+            <div class="asset-card">
+              <div class="asset-img role"><span class="delete">⌫</span><span class="asset-type">图</span></div>
+              <div class="asset-info"><b>李娜</b><small>角色 · 已认证</small><button class="cert soft">查看认证</button></div>
+            </div>
+            <div class="asset-card">
+              <div class="asset-img role"><span class="delete">⌫</span><span class="asset-type">图</span></div>
+              <div class="asset-info"><b>张伟</b><small>角色 · 待认证</small><button class="cert primary">去认证</button></div>
+            </div>
+            <div class="asset-card">
+              <div class="asset-img scene"><span class="delete">⌫</span><span class="asset-type">图</span></div>
+              <div class="asset-info"><b>云层天空</b><small>场景 · 使用</small></div>
+            </div>
+            <div class="asset-card">
+              <div class="asset-img prop"><span class="delete">⌫</span><span class="asset-type">图</span></div>
+              <div class="asset-info"><b>符文卡牌</b><small>道具 · 可选</small></div>
+            </div>
+            <div class="asset-card">
+              <div class="asset-img video"><span class="delete">⌫</span><span class="asset-type">视频</span></div>
+              <div class="asset-info"><b>云层穿越参考</b><small>视频素材 · 可拖入视频输入</small></div>
+            </div>
+            <div class="asset-card">
+              <div class="asset-img audio"><span class="delete">⌫</span><span class="asset-type">音频</span></div>
+              <div class="asset-info"><b>风声环境音</b><small>音频素材 · 可拖入音频输入</small></div>
+            </div>
+          </div>
+          <div class="asset-generate-strip" style="margin-top:12px; margin-bottom:0;">
+            <b>临时补资产</b>
+            <p style="font-size:12px; margin-top:4px;">现有素材不够时，在这里快速生成角色、场景或道具。</p>
+            <div class="asset-generate-actions">
+              <button>生成角色</button>
+              <button>生成场景</button>
+              <button>生成道具</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <label class="label">当前选中</label>
+        <div class="current-preview">
+          <div class="preview-img"><div class="play">▶</div></div>
+          <div style="padding:12px;">
+            <b>云层天空参考</b>
+            <p style="font-size:13px;">可作为当前分镜参考素材</p>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <main>
+      <section class="panel">
+        <div class="panel-body">
+          <h3 style="margin-bottom:12px;">素材输入</h3>
+          <div class="input-grid">
+            <div class="upload-box">
+              <span class="limit">最多 9</span>
+              <b>图片输入</b>
+              <div class="dash">上传图片</div>
+              <p style="font-size:13px; margin-top:12px;">已上传 0/9</p>
+            </div>
+            <div class="upload-box">
+              <span class="limit">最多 3</span>
+              <b>视频输入</b>
+              <div class="dash">上传视频</div>
+              <p style="font-size:13px; margin-top:12px;">已上传 0/3</p>
+            </div>
+            <div class="upload-box">
+              <span class="limit">最多 3，总计≤15秒</span>
+              <b>音频输入</b>
+              <div class="dash">上传音频</div>
+              <p style="font-size:13px; margin-top:12px;">已上传 0/3</p>
+            </div>
+          </div>
+          <textarea class="prompt" placeholder="输入文字，描述你想创作的画面内容、运动方式等。支持 @角色名 / @场景名；若使用上传参考图，可用 [图1][图2] 指代。"></textarea>
+          <div class="control-row">
+            <div class="control-left">
+              <select class="compact"><option>豆包 Seedance 2.0</option></select>
+            </div>
+            <div class="control-right">
+              <button id="openPromptLibrary">调用提示词</button>
+              <button>项目风格：国漫热血·都市异能风</button>
+              <button class="icon-btn">⚙</button>
+              <button class="primary icon-btn">▶</button>
+            </div>
+          </div>
+          <div class="model-extra">
+            <button class="soft">⌄ 豆包 Seedance 2.0（8 参数）</button>
+            <span>比例</span><select class="compact"><option>16:9 横屏</option></select>
+            <span>时长</span><select class="compact"><option>5 秒</option></select>
+            <span>清晰度</span><select class="compact"><option>720P</option></select>
+            <span>随机种子</span><span class="range"></span><span>-1</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="records-head">
+        <div>
+          <h2>历史生成记录</h2>
+          <p style="font-size:13px;">3 批次，共 9 条视频。默认预览模式方便快速对比结果。</p>
+        </div>
+        <div class="view-switch"><button class="on">预览</button><button>列表</button></div>
+      </section>
+
+      <section class="record-grid">
+        <article class="record">
+          <div class="video-thumb"><span class="play">▶</span><span class="check">✓</span></div>
+          <div class="record-body">
+            <h3>镜头往前移，穿过云</h3>
+            <div class="meta"><span>Seedance 2.0</span><span>首尾帧</span><span>参考图：2</span><span>5 秒</span></div>
+            <div class="post-actions"><span class="post-action done">字幕消除结果</span><button class="post-action source-link">跳转原视频</button><button class="post-action">画质增强</button></div>
+            <p style="font-size:13px;">生成：3月9日 18:20 · 完成：18:22 · 费用：¥0.00</p>
+            <div class="record-actions">
+              <button class="soft">设为当前结果</button><button>重新编辑</button><button>再次生成</button>
+            </div>
+          </div>
+        </article>
+        <article class="record">
+          <div class="video-thumb two"><span class="play">▶</span></div>
+          <div class="record-body">
+            <h3>云层打开，光线洒入</h3>
+            <div class="meta"><span>Seedance 2.0</span><span>图生视频</span><span>参考图：1</span><span>5 秒</span></div>
+            <div class="post-actions"><button class="post-action">消除字幕</button><button class="post-action">画质增强</button></div>
+            <p style="font-size:13px;">生成：3月9日 18:19 · 完成：18:20 · 费用：¥0.00</p>
+            <div class="record-actions">
+              <button class="soft">设为当前结果</button><button>重新编辑</button><button>再次生成</button>
+            </div>
+          </div>
+        </article>
+        <article class="record">
+          <div class="video-thumb three"><span class="play">▶</span></div>
+          <div class="record-body">
+            <h3>镜头穿云后俯冲</h3>
+            <div class="meta"><span>Seedance 2.0</span><span>多模态视频</span><span>参考图：3</span><span>5 秒</span></div>
+            <div class="post-actions"><button class="post-action">消除字幕</button><span class="post-action done">画质增强结果</span><button class="post-action source-link">跳转原视频</button></div>
+            <p style="font-size:13px;">生成：3月9日 18:12 · 完成：18:14 · 费用：¥0.00</p>
+            <div class="record-actions">
+              <button class="soft">设为当前结果</button><button>重新编辑</button><button>再次生成</button>
+            </div>
+          </div>
+        </article>
+        <article class="record">
+          <div class="video-thumb two"><span class="play">▶</span></div>
+          <div class="record-body">
+            <h3>角色抬头看向天空</h3>
+            <div class="meta"><span>Seedance 2.0</span><span>图生视频</span><span>参考图：2</span><span>5 秒</span></div>
+            <div class="post-actions"><button class="post-action">消除字幕</button><button class="post-action">画质增强</button></div>
+            <p style="font-size:13px;">生成：3月9日 17:58 · 完成：18:00 · 费用：¥0.00</p>
+            <div class="record-actions">
+              <button class="soft">设为当前结果</button><button>重新编辑</button><button>再次生成</button>
+            </div>
+          </div>
+        </article>
+        <article class="record">
+          <div class="video-thumb"><span class="play">▶</span></div>
+          <div class="record-body">
+            <h3>天空云层慢慢流动</h3>
+            <div class="meta"><span>Seedance 2.0</span><span>首尾帧</span><span>参考图：2</span><span>5 秒</span></div>
+            <div class="post-actions"><span class="post-action disabled">无字幕</span><button class="post-action">画质增强</button></div>
+            <p style="font-size:13px;">生成：3月9日 17:40 · 完成：17:43 · 费用：¥0.00</p>
+            <div class="record-actions">
+              <button class="soft">设为当前结果</button><button>重新编辑</button><button>再次生成</button>
+            </div>
+          </div>
+        </article>
+        <article class="record">
+          <div class="video-thumb three"><span class="play">▶</span></div>
+          <div class="record-body">
+            <h3>穿过云层进入城市</h3>
+            <div class="meta"><span>Seedance 2.0</span><span>多模态视频</span><span>参考图：3</span><span>5 秒</span></div>
+            <div class="post-actions"><button class="post-action">消除字幕</button><button class="post-action">画质增强</button></div>
+            <p style="font-size:13px;">生成：3月9日 17:30 · 完成：17:32 · 费用：¥0.00</p>
+            <div class="record-actions">
+              <button class="soft">设为当前结果</button><button>重新编辑</button><button>再次生成</button>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="promptModal">
+    <div class="dialog">
+      <div class="dialog-head">
+        <div>
+          <h2>调用提示词</h2>
+          <p style="font-size:13px;">制作页内弹窗多选，不跳转离开当前分镜。可随时调用风格包和通用提示词。</p>
+        </div>
+        <button class="icon-btn" id="closePromptModal">×</button>
+      </div>
+      <div class="dialog-body">
+        <aside class="prompt-nav">
+          <button class="on">项目风格包</button>
+          <button>通用提示词</button>
+          <button>人物一致性</button>
+          <button>镜头语言</button>
+          <button>视频动态</button>
+          <button>负向提示词</button>
+          <button>自主补充</button>
+        </aside>
+        <section class="prompt-main">
+          <div class="selected-bar">
+            <b>已选择 4 个模块</b>
+            <p style="font-size:13px; margin-top:4px;">将追加到当前分镜 Prompt，可选择“仅本分镜”或“应用到本集后续分镜”。</p>
+            <div class="selected-tags">
+              <span class="pill on">国漫热血·都市异能风</span>
+              <span class="pill on">角色一致性</span>
+              <span class="pill on">镜头缓慢推进</span>
+              <span class="pill on">通用负向</span>
+            </div>
+          </div>
+          <div class="prompt-grid">
+            <div class="prompt-card on">
+              <div class="prompt-card-head"><h3>国漫热血·都市异能风</h3><span class="checkmark">✓</span></div>
+              <p style="font-size:13px;">现代都市背景，热血少年感，能量特效清晰，线条硬朗，适合战斗和觉醒分镜。</p>
+              <div class="filters"><span class="pill on">项目风格</span><span class="pill">主风格</span></div>
+            </div>
+            <div class="prompt-card">
+              <div class="prompt-card-head"><h3>真人电影感</h3><span class="checkmark">✓</span></div>
+              <p style="font-size:13px;">ARRI Alexa 影像质感，浅景深，35mm 胶片颗粒，适合仿真人短剧分镜。</p>
+              <div class="filters"><span class="pill">仿真人</span></div>
+            </div>
+            <div class="prompt-card on">
+              <div class="prompt-card-head"><h3>角色一致性</h3><span class="checkmark">✓</span></div>
+              <p style="font-size:13px;">严格保留参考人物资产图的五官、发型、身形、服装、年龄感和气质。</p>
+              <div class="filters"><span class="pill on">通用提示词</span><span class="pill">可多选</span></div>
+            </div>
+            <div class="prompt-card on">
+              <div class="prompt-card-head"><h3>镜头缓慢推进</h3><span class="checkmark">✓</span></div>
+              <p style="font-size:13px;">镜头从中景缓慢向前推进，主体保持稳定，背景轻微视差，运动自然不突兀。</p>
+              <div class="filters"><span class="pill on">镜头语言</span></div>
+            </div>
+            <div class="prompt-card">
+              <div class="prompt-card-head"><h3>云层穿越动态</h3><span class="checkmark">✓</span></div>
+              <p style="font-size:13px;">镜头穿过云层，云雾从画面两侧掠过，光线逐渐变亮，结构保持稳定。</p>
+              <div class="filters"><span class="pill">视频动态</span><span class="pill">Seedance 2.0</span></div>
+            </div>
+            <div class="prompt-card on">
+              <div class="prompt-card-head"><h3>通用负向</h3><span class="checkmark">✓</span></div>
+              <p style="font-size:13px;">低画质、模糊、压缩伪影、身份漂移、字幕水印、画面闪烁、背景扭曲。</p>
+              <div class="filters"><span class="pill on">负向提示词</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="dialog-foot">
+        <div class="append-mode">
+          <span>追加范围</span>
+          <span class="pill on">仅当前分镜</span>
+          <span class="pill">本集后续分镜</span>
+          <span class="pill">整个项目</span>
+        </div>
+        <div class="control-right">
+          <button id="cancelPromptModal">取消</button>
+          <button class="primary">插入到 Prompt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById("promptModal");
+    document.getElementById("openPromptLibrary").onclick = () => modal.classList.add("show");
+    document.getElementById("closePromptModal").onclick = () => modal.classList.remove("show");
+    document.getElementById("cancelPromptModal").onclick = () => modal.classList.remove("show");
+    document.querySelectorAll(".prompt-card").forEach(card => {
+      card.addEventListener("click", () => card.classList.toggle("on"));
+    });
+  </script>
+</body>
+</html>

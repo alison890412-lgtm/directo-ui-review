@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Directo 资产库保守改版 UI</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#101114; --panel:#1b1d22; --panel2:#20232a; --panel3:#15171c;
+      --line:#343842; --soft:#292d35; --text:#f5f6f8; --muted:#a1a8b4; --faint:#747c89;
+      --green:#10c78a; --greenSoft:rgba(16,199,138,.12); --amber:#f6b83f; --red:#ef4444; --purple:#d46cff;
+      --radius:8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); }
+    button,input,select { font:inherit; color:inherit; }
+    button { border:1px solid var(--line); background:var(--panel2); border-radius:var(--radius); padding:10px 13px; cursor:pointer; }
+    button:hover { border-color:#56606b; }
+    .primary { background:var(--green); border-color:var(--green); color:#06130f; font-weight:850; }
+    .soft { background:var(--greenSoft); border-color:rgba(16,199,138,.45); color:#68efc0; }
+    .danger { border-color:rgba(239,68,68,.55); color:#ff9b9b; background:rgba(239,68,68,.08); }
+    header { height:72px; border-bottom:1px solid var(--soft); display:flex; align-items:center; justify-content:space-between; padding:0 28px; background:rgba(16,17,20,.96); position:sticky; top:0; z-index:10; }
+    .brand { display:flex; align-items:center; gap:12px; font-size:22px; font-weight:850; }
+    .logo { width:28px; height:22px; border-radius:6px; background:linear-gradient(135deg,#10c78a,#22d3ee); position:relative; }
+    .logo:after { content:""; position:absolute; right:-8px; top:3px; border-left:9px solid #10c78a; border-top:8px solid transparent; border-bottom:8px solid transparent; }
+    nav { display:flex; gap:20px; color:var(--muted); }
+    nav span.active { color:var(--text); border-bottom:2px solid var(--green); padding-bottom:8px; }
+    .top-actions { display:flex; align-items:center; gap:12px; }
+    .balance { border:1px solid var(--line); border-radius:999px; padding:8px 14px; color:var(--muted); }
+    .wrap { max-width:1760px; margin:0 auto; padding:28px; }
+    h1,h2,h3,p { margin:0; }
+    h1 { font-size:28px; margin-bottom:8px; }
+    h2 { font-size:20px; }
+    h3 { font-size:16px; }
+    p { color:var(--muted); line-height:1.58; }
+    .page-head { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; margin-bottom:22px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .tabs { display:flex; gap:8px; margin-bottom:18px; }
+    .tab { padding:10px 13px; border-radius:999px; color:var(--muted); }
+    .tab.active { color:#68efc0; border-color:rgba(16,199,138,.55); background:var(--greenSoft); }
+    .notice { border:1px solid rgba(16,199,138,.35); background:rgba(16,199,138,.09); border-radius:var(--radius); padding:13px 14px; color:#c8ffe8; margin-bottom:18px; }
+    .notice.warn { border-color:rgba(246,184,63,.42); background:rgba(246,184,63,.1); color:#ffe7b0; }
+    .grid-main { display:grid; grid-template-columns:1fr 430px; gap:18px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+    .panel-head { padding:15px 16px; border-bottom:1px solid var(--soft); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .panel-body { padding:16px; }
+    .toolbar { display:grid; grid-template-columns:repeat(5,auto) 1fr auto; gap:10px; align-items:center; margin-bottom:14px; }
+    .seg { display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; width:max-content; }
+    .seg button { border:0; border-right:1px solid var(--line); border-radius:0; color:var(--muted); background:var(--panel3); padding:10px 14px; }
+    .seg button:last-child { border-right:0; }
+    .seg button.on { background:#f2f4f7; color:#12151a; font-weight:850; }
+    input,select { background:var(--panel3); border:1px solid var(--line); border-radius:var(--radius); padding:11px 12px; outline:none; min-width:0; }
+    .search { min-width:340px; }
+    .folder-list { border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+    .row { display:grid; grid-template-columns:42px 1fr auto; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid var(--soft); background:var(--panel3); }
+    .row:last-child { border-bottom:0; }
+    .row:hover { background:#1b2028; }
+    .folder { width:34px; height:26px; border:3px solid #ffc928; border-radius:5px; position:relative; }
+    .folder:before { content:""; position:absolute; top:-9px; left:1px; width:16px; height:8px; border:3px solid #ffc928; border-bottom:0; border-radius:5px 5px 0 0; background:var(--panel3); }
+    .asset-thumb { width:42px; height:42px; border-radius:7px; background:linear-gradient(135deg,#303846,#16191f); position:relative; overflow:hidden; }
+    .asset-thumb.role { background:radial-gradient(circle at 52% 32%,#e3c1a0 0 15%,transparent 16%),linear-gradient(135deg,#3e4756,#171a20); }
+    .asset-thumb.scene { background:radial-gradient(circle at 64% 35%,#78b7ff 0 18%,transparent 19%),linear-gradient(135deg,#263f3a,#15171d); }
+    .asset-thumb.prop { background:radial-gradient(circle at 50% 42%,#ffd36a 0 18%,transparent 19%),linear-gradient(135deg,#443529,#15171d); }
+    .row-title { font-weight:800; margin-bottom:4px; }
+    .small { font-size:12px; color:var(--muted); line-height:1.5; }
+    .tag-row { display:flex; gap:6px; flex-wrap:wrap; }
+    .tag { display:inline-flex; border:1px solid var(--line); background:#13151a; color:var(--muted); border-radius:999px; padding:5px 8px; font-size:12px; line-height:1; }
+    .tag.on { color:#65efbf; background:var(--greenSoft); border-color:rgba(16,199,138,.45); }
+    .tag.warn { color:#ffd27a; background:rgba(246,184,63,.08); border-color:rgba(246,184,63,.4); }
+    .tag.purple { color:#f1c9ff; background:rgba(212,108,255,.09); border-color:rgba(212,108,255,.38); }
+    .side-card { border:1px solid var(--line); border-radius:var(--radius); padding:14px; background:var(--panel3); margin-bottom:12px; }
+    .flow { display:grid; gap:10px; margin-top:12px; }
+    .flow-step { display:grid; grid-template-columns:28px 1fr; gap:10px; align-items:start; }
+    .num { width:28px; height:28px; border-radius:999px; display:grid; place-items:center; color:#09130f; background:var(--green); font-weight:850; font-size:13px; }
+    .mock { margin-top:22px; display:grid; grid-template-columns:360px 1fr; gap:18px; align-items:start; }
+    .phone-panel { background:#0d0f13; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+    .modal-head { padding:14px 16px; border-bottom:1px solid var(--soft); display:flex; justify-content:space-between; align-items:center; }
+    .steps { display:flex; gap:6px; margin:14px 16px; }
+    .step-pill { flex:1; text-align:center; border:1px solid var(--line); border-radius:999px; padding:7px 8px; color:var(--muted); font-size:12px; }
+    .step-pill.on { color:#68efc0; border-color:rgba(16,199,138,.5); background:var(--greenSoft); }
+    .choose { padding:0 16px 16px; display:grid; gap:10px; }
+    .choice { border:1px solid var(--line); border-radius:var(--radius); padding:12px; background:var(--panel); }
+    .choice.active { border-color:rgba(16,199,138,.65); background:var(--greenSoft); }
+    .workbench { display:grid; grid-template-columns:310px 1fr; gap:0; min-height:560px; }
+    .left { background:#0d0f13; border-right:1px solid var(--line); padding:14px; }
+    .canvas { padding:16px; background:#14161b; }
+    .asset-panel-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; }
+    .mini-tabs { display:flex; gap:6px; margin-bottom:12px; }
+    .mini-tab { flex:1; text-align:center; border:1px solid var(--line); border-radius:var(--radius); padding:8px 6px; color:var(--muted); font-size:12px; }
+    .mini-tab.on { color:#68efc0; background:var(--greenSoft); border-color:rgba(16,199,138,.45); }
+    .asset-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; max-height:320px; overflow:auto; }
+    .asset-card { border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); overflow:hidden; }
+    .asset-img { height:86px; background:linear-gradient(135deg,#323b49,#14171d); }
+    .asset-img.role { background:radial-gradient(circle at 52% 28%,#e3c1a0 0 16%,transparent 17%),linear-gradient(135deg,#3e4756,#171a20); }
+    .asset-img.scene { background:radial-gradient(circle at 64% 34%,#78b7ff 0 18%,transparent 19%),linear-gradient(135deg,#263f3a,#15171d); }
+    .asset-img.prop { background:radial-gradient(circle at 50% 43%,#ffd36a 0 18%,transparent 19%),linear-gradient(135deg,#443529,#15171d); }
+    .asset-info { padding:9px; }
+    .preview { height:260px; border:1px solid var(--line); border-radius:var(--radius); background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.6)),radial-gradient(circle at 50% 35%,#e4c39e 0 13%,transparent 14%),linear-gradient(135deg,#334153,#15171c); margin-bottom:14px; }
+    .shot-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .shot { border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); min-height:78px; padding:10px; color:var(--muted); font-size:12px; }
+    .shot.on { border-color:var(--green); color:var(--text); }
+    .cert-strip { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; border:1px solid rgba(246,184,63,.38); background:rgba(246,184,63,.08); border-radius:var(--radius); padding:12px; margin-bottom:14px; }
+    .cert-strip b { color:#ffe7b0; }
+    .cert-card { border:1px solid rgba(246,184,63,.38); background:rgba(246,184,63,.08); border-radius:var(--radius); padding:12px; margin-bottom:10px; }
+    .lock { color:#ffb4b4; border-color:rgba(239,68,68,.45); background:rgba(239,68,68,.08); }
+    @media (max-width: 1180px) {
+      .grid-main,.mock,.workbench { grid-template-columns:1fr; }
+      .toolbar { grid-template-columns:1fr; }
+      .search { min-width:0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="logo"></span><span>Directo</span></div>
+    <nav>
+      <span>剧本</span><span>任务分配</span><span class="active">资产库</span><span>风格库</span>
+    </nav>
+    <div class="top-actions">
+      <span class="balance">剩余金币：15,226.22</span>
+      <button class="primary">+ 新建项目</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="page-head">
+      <div>
+        <h1>资产库保守改版方案</h1>
+        <p>不移动大板块，只把现有资产库解释为“组织资产储备”，并在新建项目和制作页补两个轻入口。</p>
+      </div>
+      <div class="actions">
+        <button>查看现有逻辑</button>
+        <button class="soft">最小开发量</button>
+      </div>
+    </section>
+
+    <div class="tabs">
+      <button class="tab active">资产库页面</button>
+      <button class="tab">新建项目资产</button>
+      <button class="tab">制作页素材面板</button>
+    </div>
+
+    <div class="notice">
+      保守版的核心：资产库不承担“制作流程入口”，只承担“可复用资产储备”。当前项目真正使用的资产，统一叫“项目资产”，在新建项目和制作页里轻量管理。
+    </div>
+    <div class="notice warn">
+      SD2.0 人像素材库规则：所有仿真人角色图、真人照片、真人出镜视频参考，只要画面含真人/虚拟人，都必须先完成素材认证。未认证素材可以保存到资产库，但不能被项目分镜引用或发起 Seedance 2.0 生成。
+    </div>
+
+    <section class="grid-main">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>资产库</h2>
+            <p class="small">组织共享素材；导入项目后会复制为该项目私有素材。</p>
+          </div>
+          <div class="actions">
+            <button>新建文件夹</button>
+            <button class="primary">+ 新增资产</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="toolbar">
+            <div class="seg">
+              <button class="on">角色</button><button>场景</button><button>道具</button><button>视频素材</button><button>音频素材</button>
+            </div>
+            <input class="search" placeholder="按名称搜索（搜索全部文件夹）" />
+            <select><option>最新创建</option><option>最近使用</option><option>已认证优先</option></select>
+          </div>
+
+          <div class="folder-list">
+            <div class="row">
+              <span class="folder"></span>
+              <div>
+                <div class="row-title">怪医</div>
+                <p class="small">9 个角色 · 3 个已通过 SD2.0 人像认证 · 1 个待认证 · 已被 2 个项目引用</p>
+              </div>
+              <div class="tag-row"><span class="tag on">可导入项目</span><span class="tag warn">含真人素材</span><span class="tag">编辑</span></div>
+            </div>
+            <div class="row">
+              <span class="folder"></span>
+              <div>
+                <div class="row-title">李芝 荔枝</div>
+                <p class="small">4 个角色 · 1 个场景 · 适合甜宠现代</p>
+              </div>
+              <div class="tag-row"><span class="tag on">可导入项目</span><span class="tag">编辑</span></div>
+            </div>
+            <div class="row">
+              <span class="folder"></span>
+              <div>
+                <div class="row-title">穿成炮灰女配后</div>
+                <p class="small">4 个角色 · 5 个场景 · 2 个道具</p>
+              </div>
+              <div class="tag-row"><span class="tag on">可导入项目</span><span class="tag">编辑</span></div>
+            </div>
+            <div class="row">
+              <span class="asset-thumb role"></span>
+              <div>
+                <div class="row-title">赵步理</div>
+                <p class="small">虚拟人像图片 · SD2.0 已认证 · 最近用于《怪医》</p>
+              </div>
+              <div class="tag-row"><span class="tag purple">角色</span><span class="tag on">已认证</span><span class="tag on">导入</span></div>
+            </div>
+            <div class="row">
+              <span class="asset-thumb scene"></span>
+              <div>
+                <div class="row-title">医院值班室</div>
+                <p class="small">场景图 · 可作为分镜背景参考</p>
+              </div>
+              <div class="tag-row"><span class="tag purple">场景</span><span class="tag on">导入</span></div>
+            </div>
+            <div class="row">
+              <span class="asset-thumb prop"></span>
+              <div>
+                <div class="row-title">古书</div>
+                <p class="small">道具图 · 已被 1 个分镜引用</p>
+              </div>
+              <div class="tag-row"><span class="tag purple">道具</span><span class="tag on">导入</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <div class="panel-head"><h2>这版只新增什么</h2><span class="tag on">轻改</span></div>
+        <div class="panel-body">
+          <div class="side-card">
+            <h3>0. SD2.0 认证跟随素材</h3>
+            <p class="small">不做单独认证入口。凡是含真人/虚拟人的图片或视频参考，在素材卡片下方直接显示“去认证 / 查看认证”。</p>
+          </div>
+          <div class="side-card">
+            <h3>1. 文案定位改清楚</h3>
+            <p class="small">把“资产库用于组织共享公用素材”强化成：组织资产储备，可跨项目复用。</p>
+          </div>
+          <div class="side-card">
+            <h3>2. 导入项目入口</h3>
+            <p class="small">文件夹和单个资产都保留“导入到项目”动作，不改变资产库主布局。</p>
+          </div>
+          <div class="side-card">
+            <h3>3. 新建项目加一步</h3>
+            <p class="small">新建项目弹窗里加“项目资产”步骤：从资产库选，也可以跳过。</p>
+          </div>
+          <div class="side-card">
+            <h3>4. 制作页素材面板改名</h3>
+            <p class="small">把“本项目素材 / 上传新素材 / 最近使用”改成更明确的“项目资产 / 从资产库 / 上传”。</p>
+          </div>
+          <div class="flow">
+            <div class="flow-step"><span class="num">1</span><p class="small">资产库：含真人素材先进入 SD2.0 人像认证。</p></div>
+            <div class="flow-step"><span class="num">2</span><p class="small">新建项目：只导入已认证的人像资产，未认证项提示补认证。</p></div>
+            <div class="flow-step"><span class="num">3</span><p class="small">制作页：分镜调用前检查认证状态。</p></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="mock">
+      <div class="phone-panel">
+        <div class="modal-head">
+          <h2>新建项目</h2>
+          <span class="tag">轻新增一步</span>
+        </div>
+        <div class="steps">
+          <span class="step-pill">剧本</span><span class="step-pill">风格包</span><span class="step-pill on">项目资产</span><span class="step-pill">确认</span>
+        </div>
+        <div class="choose">
+          <div class="cert-card">
+            <h3>人像素材校验</h3>
+            <p class="small">已选 6 个含真人/虚拟人的资产，其中 5 个已认证，1 个待认证。待认证素材可先加入项目草稿，但生成前需要补认证。</p>
+          </div>
+          <div class="choice active">
+            <h3>从资产库导入</h3>
+            <p class="small">选择已有角色、场景、道具，进入项目后成为项目资产。</p>
+          </div>
+          <div class="choice">
+            <h3>先空着，制作时再补</h3>
+            <p class="small">适合只有剧本或分镜，还没准备美术资产的项目。</p>
+          </div>
+          <div class="choice">
+            <h3>上传本项目资产</h3>
+            <p class="small">仅用于当前项目，后续可选择沉淀回资产库。</p>
+          </div>
+          <div class="actions">
+            <button>上一步</button><button class="primary">创建项目</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>制作页素材面板</h2>
+            <p class="small">只调左侧素材面板，不重构分镜生成主页面。</p>
+          </div>
+          <span class="tag on">低风险</span>
+        </div>
+        <div class="workbench">
+          <aside class="left">
+            <div class="asset-panel-head">
+              <div>
+                <h3>素材面板</h3>
+                <p class="small">当前项目已入库 15 个</p>
+              </div>
+              <button class="soft">+ 添加</button>
+            </div>
+            <div class="cert-strip">
+              <div>
+                <b>SD2.0 人像认证</b>
+                <p class="small">含真人素材：已通过 3 个，待认证 1 个</p>
+              </div>
+              <span class="tag warn">素材卡片内处理</span>
+            </div>
+            <div class="mini-tabs">
+              <div class="mini-tab on">项目资产</div>
+              <div class="mini-tab">从资产库</div>
+              <div class="mini-tab">上传</div>
+            </div>
+            <input style="width:100%; margin-bottom:12px;" placeholder="搜索项目资产" />
+            <div class="tag-row" style="margin-bottom:12px;">
+              <span class="tag on">全部</span><span class="tag">角色</span><span class="tag">场景</span><span class="tag">道具</span>
+            </div>
+            <div class="asset-grid">
+              <div class="asset-card">
+                <div class="asset-img role"></div>
+                <div class="asset-info"><b>赵步理</b><p class="small">角色 · SD2.0 已认证</p><button class="soft" style="width:100%; margin-top:8px; padding:7px 8px;">查看认证</button></div>
+              </div>
+              <div class="asset-card">
+                <div class="asset-img scene"></div>
+                <div class="asset-info"><b>医院值班室</b><p class="small">场景 · 引用</p></div>
+              </div>
+              <div class="asset-card">
+                <div class="asset-img prop"></div>
+                <div class="asset-info"><b>古书</b><p class="small">道具 · 引用</p></div>
+              </div>
+              <div class="asset-card">
+                <div class="asset-img role"></div>
+                <div class="asset-info"><b>江河</b><p class="small">角色 · 待人像认证</p><button class="primary" style="width:100%; margin-top:8px; padding:7px 8px;">去认证</button></div>
+              </div>
+            </div>
+          </aside>
+          <section class="canvas">
+            <div class="preview"></div>
+            <div class="shot-row">
+              <div class="shot on">分镜 1<br>赵步理 + 医院值班室 + 古书</div>
+              <div class="shot">分镜 2<br>补充道具</div>
+              <div class="shot">分镜 3<br>复用场景</div>
+              <div class="shot">分镜 4<br>待生成</div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
