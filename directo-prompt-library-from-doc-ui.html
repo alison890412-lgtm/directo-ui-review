@@ -143,7 +143,16 @@
       ["common", "通用提示词", "骨架、角色一致性、动态、负向"]
     ];
     const DEFAULT_DATA = JSON.parse(JSON.stringify(DATA));
-    let customMap = JSON.parse(localStorage.getItem("directo_style_custom_map") || "{}");
+    const STORAGE_KEY = "directo_style_custom_map";
+    function loadCustomMap() {
+      try { return JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}"); }
+      catch (error) { return {}; }
+    }
+    function persistCustomMap() {
+      try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(customMap)); }
+      catch (error) {}
+    }
+    let customMap = loadCustomMap();
     let state = { cat:"all", query:"", selected:DATA[0], tab:"project", editing:false };
 
     const catName = key => (CATS.find(c => c[0] === key) || [,""])[1];
@@ -157,11 +166,11 @@
     function isCustomized(item) { return Boolean(customMap[item.number]); }
     function saveCustom(number, next) {
       customMap[number] = next;
-      localStorage.setItem("directo_style_custom_map", JSON.stringify(customMap));
+      persistCustomMap();
     }
     function resetCustom(number) {
       delete customMap[number];
-      localStorage.setItem("directo_style_custom_map", JSON.stringify(customMap));
+      persistCustomMap();
     }
     function textOf(item) {
       return [item.name,item.en,item.usage,item.representative,item.light,item.color,item.texture,item.concise,item.negative?.cn,item.negative?.en].filter(Boolean).join(" ");
