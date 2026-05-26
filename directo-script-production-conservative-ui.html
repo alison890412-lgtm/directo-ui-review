@@ -63,6 +63,7 @@
     .asset-img.prop { background:radial-gradient(circle at 50% 43%,#ffd36a 0 18%,transparent 19%),linear-gradient(135deg,#443529,#15171d); }
     .asset-img.video { background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.38) 0 16%,transparent 17%),linear-gradient(135deg,#243b5a,#15171d); }
     .asset-img.audio { background:linear-gradient(90deg,transparent 0 15%,rgba(56,189,248,.45) 16% 20%,transparent 21% 30%,rgba(56,189,248,.7) 31% 38%,transparent 39% 48%,rgba(56,189,248,.35) 49% 54%,transparent 55%),linear-gradient(135deg,#1f3441,#15171d); }
+    .asset-img.other { background:radial-gradient(circle at 35% 38%,#a78bfa 0 13%,transparent 14%),radial-gradient(circle at 66% 56%,#f472b6 0 11%,transparent 12%),linear-gradient(135deg,#352840,#15171d); }
     .delete { position:absolute; top:7px; left:7px; width:28px; height:28px; border-radius:999px; display:grid; place-items:center; background:rgba(239,68,68,.7); color:#fff; }
     .asset-type { position:absolute; right:7px; top:7px; border-radius:999px; background:rgba(0,0,0,.5); color:#dce5ef; padding:4px 7px; font-size:11px; }
     .asset-info { padding:9px; font-size:13px; }
@@ -125,6 +126,13 @@
     .prompt-card.on .checkmark { color:#06130f; background:var(--green); border-color:var(--green); font-weight:900; }
     .dialog-foot { padding:16px 22px; border-top:1px solid var(--soft); display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .append-mode { display:flex; gap:8px; align-items:center; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+    .upload-dialog { width:min(720px, 92vw); }
+    .upload-body { padding:18px 22px; display:grid; gap:14px; }
+    .category-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .category-card { border:1px solid var(--line); background:var(--panel); border-radius:var(--radius); padding:12px; min-height:74px; }
+    .category-card.on { border-color:rgba(16,199,138,.7); background:var(--greenSoft); color:#bdfbe0; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .drop-large { border:1px dashed #4a5260; border-radius:var(--radius); min-height:116px; display:grid; place-items:center; text-align:center; color:var(--muted); background:#111318; }
     .asset-generate-strip { border:1px solid var(--line); background:var(--panel3); border-radius:var(--radius); padding:12px; margin-bottom:12px; }
     .asset-generate-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
     .asset-generate-actions button { padding:9px 8px; font-size:13px; }
@@ -189,7 +197,7 @@
               <h2>素材面板</h2>
               <p style="font-size:13px;">本项目所有图片、视频、音频素材均可调用</p>
             </div>
-            <button class="primary">上传资产</button>
+            <button class="primary" id="openUploadAsset">上传资产</button>
           </div>
           <div class="tabs">
             <div class="tab on">项目资产</div>
@@ -198,7 +206,7 @@
           </div>
           <input placeholder="搜索本项目素材" />
           <div class="filters">
-            <span class="pill on">全部</span><span class="pill">角色</span><span class="pill">场景</span><span class="pill">道具</span><span class="pill">视频</span><span class="pill">音频</span>
+            <span class="pill on">全部</span><span class="pill">角色</span><span class="pill">场景</span><span class="pill">道具</span><span class="pill">视频</span><span class="pill">音频</span><span class="pill">其他</span>
           </div>
           <p style="font-size:12px; margin-bottom:10px;">上传到项目后的素材会进入“项目资产”；勾选沉淀后可同步到资产库，供其他项目复用。</p>
           <div class="asset-grid">
@@ -225,6 +233,10 @@
             <div class="asset-card">
               <div class="asset-img audio"><span class="delete">⌫</span><span class="asset-type">音频</span></div>
               <div class="asset-info"><b>风声环境音</b><small>音频素材 · 可拖入音频输入</small></div>
+            </div>
+            <div class="asset-card">
+              <div class="asset-img other"><span class="delete">⌫</span><span class="asset-type">其他</span></div>
+              <div class="asset-info"><b>参考设定图</b><small>其他 · 世界观/服装板参考</small></div>
             </div>
           </div>
           <div class="asset-generate-strip" style="margin-top:12px; margin-bottom:0;">
@@ -461,6 +473,53 @@
     </div>
   </div>
 
+  <div class="modal" id="uploadModal">
+    <div class="dialog upload-dialog">
+      <div class="dialog-head">
+        <div>
+          <h2>上传资产</h2>
+          <p style="font-size:13px;">先选择分类，素材会进入当前项目资产；勾选沉淀后可同步到资产库。</p>
+        </div>
+        <button class="icon-btn" id="closeUploadModal">×</button>
+      </div>
+      <div class="upload-body">
+        <div>
+          <label class="label">资产分类 <span class="required">*</span></label>
+          <div class="category-grid">
+            <div class="category-card on"><b>角色</b><p style="font-size:12px;">人物图、角色设定、含真人需认证</p></div>
+            <div class="category-card"><b>场景</b><p style="font-size:12px;">房间、街道、环境参考图</p></div>
+            <div class="category-card"><b>道具</b><p style="font-size:12px;">物品、文件、武器、饰品</p></div>
+            <div class="category-card"><b>视频</b><p style="font-size:12px;">动作参考、真人出镜视频需认证</p></div>
+            <div class="category-card"><b>音频</b><p style="font-size:12px;">对白、环境音、音效素材</p></div>
+            <div class="category-card"><b>其他</b><p style="font-size:12px;">设定图、资料、暂未归类素材</p></div>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label class="label">资产名称</label>
+            <input placeholder="例如：赵步理主形象 / 医院走廊环境音" />
+          </div>
+          <div>
+            <label class="label">关联项目</label>
+            <select><option>当前项目：小丑牌</option><option>怪医</option><option>李芝 荔枝</option></select>
+          </div>
+        </div>
+        <div class="drop-large">拖入文件或点击上传<br><span style="font-size:12px;">图片、视频、音频均支持；系统按分类写入素材面板</span></div>
+        <div class="form-grid">
+          <label class="pill on"><input type="checkbox" checked style="width:auto; margin-right:6px;">加入本项目资产</label>
+          <label class="pill"><input type="checkbox" style="width:auto; margin-right:6px;">同步沉淀到资产库</label>
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <p style="font-size:13px;">含真人/虚拟人的图片或视频上传后，素材卡片下方会出现“去认证”。</p>
+        <div class="control-right">
+          <button id="cancelUploadModal">取消</button>
+          <button class="primary">确认上传</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const modal = document.getElementById("promptModal");
     document.getElementById("openPromptLibrary").onclick = () => modal.classList.add("show");
@@ -468,6 +527,16 @@
     document.getElementById("cancelPromptModal").onclick = () => modal.classList.remove("show");
     document.querySelectorAll(".prompt-card").forEach(card => {
       card.addEventListener("click", () => card.classList.toggle("on"));
+    });
+    const uploadModal = document.getElementById("uploadModal");
+    document.getElementById("openUploadAsset").onclick = () => uploadModal.classList.add("show");
+    document.getElementById("closeUploadModal").onclick = () => uploadModal.classList.remove("show");
+    document.getElementById("cancelUploadModal").onclick = () => uploadModal.classList.remove("show");
+    document.querySelectorAll(".category-card").forEach(card => {
+      card.addEventListener("click", () => {
+        document.querySelectorAll(".category-card").forEach(item => item.classList.remove("on"));
+        card.classList.add("on");
+      });
     });
   </script>
 </body>

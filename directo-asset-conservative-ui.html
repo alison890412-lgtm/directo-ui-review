@@ -46,7 +46,7 @@
     .panel { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
     .panel-head { padding:15px 16px; border-bottom:1px solid var(--soft); display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .panel-body { padding:16px; }
-    .toolbar { display:grid; grid-template-columns:repeat(5,auto) 1fr auto; gap:10px; align-items:center; margin-bottom:14px; }
+    .toolbar { display:grid; grid-template-columns:auto 150px 1fr auto; gap:10px; align-items:center; margin-bottom:14px; }
     .seg { display:flex; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; width:max-content; }
     .seg button { border:0; border-right:1px solid var(--line); border-radius:0; color:var(--muted); background:var(--panel3); padding:10px 14px; }
     .seg button:last-child { border-right:0; }
@@ -63,6 +63,9 @@
     .asset-thumb.role { background:radial-gradient(circle at 52% 32%,#e3c1a0 0 15%,transparent 16%),linear-gradient(135deg,#3e4756,#171a20); }
     .asset-thumb.scene { background:radial-gradient(circle at 64% 35%,#78b7ff 0 18%,transparent 19%),linear-gradient(135deg,#263f3a,#15171d); }
     .asset-thumb.prop { background:radial-gradient(circle at 50% 42%,#ffd36a 0 18%,transparent 19%),linear-gradient(135deg,#443529,#15171d); }
+    .asset-thumb.video { background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.38) 0 16%,transparent 17%),linear-gradient(135deg,#243b5a,#15171d); }
+    .asset-thumb.audio { background:linear-gradient(90deg,transparent 0 15%,rgba(56,189,248,.45) 16% 20%,transparent 21% 30%,rgba(56,189,248,.7) 31% 38%,transparent 39% 48%,rgba(56,189,248,.35) 49% 54%,transparent 55%),linear-gradient(135deg,#1f3441,#15171d); }
+    .asset-thumb.other { background:radial-gradient(circle at 35% 38%,#a78bfa 0 13%,transparent 14%),radial-gradient(circle at 66% 56%,#f472b6 0 11%,transparent 12%),linear-gradient(135deg,#352840,#15171d); }
     .row-title { font-weight:800; margin-bottom:4px; }
     .small { font-size:12px; color:var(--muted); line-height:1.5; }
     .tag-row { display:flex; gap:6px; flex-wrap:wrap; }
@@ -105,6 +108,11 @@
     .cert-strip b { color:#ffe7b0; }
     .cert-card { border:1px solid rgba(246,184,63,.38); background:rgba(246,184,63,.08); border-radius:var(--radius); padding:12px; margin-bottom:10px; }
     .lock { color:#ffb4b4; border-color:rgba(239,68,68,.45); background:rgba(239,68,68,.08); }
+    .upload-form { display:grid; gap:12px; margin-top:14px; border:1px solid var(--line); border-radius:var(--radius); padding:14px; background:#111318; }
+    .category-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+    .category-card { border:1px solid var(--line); border-radius:var(--radius); padding:10px; background:var(--panel); min-height:66px; }
+    .category-card.on { border-color:rgba(16,199,138,.65); background:var(--greenSoft); color:#bdfbe0; }
+    .drop-large { border:1px dashed #4a5260; border-radius:var(--radius); min-height:88px; display:grid; place-items:center; text-align:center; color:var(--muted); }
     @media (max-width: 1180px) {
       .grid-main,.mock,.workbench { grid-template-columns:1fr; }
       .toolbar { grid-template-columns:1fr; }
@@ -164,9 +172,10 @@
         <div class="panel-body">
           <div class="toolbar">
             <div class="seg">
-              <button class="on">角色</button><button>场景</button><button>道具</button><button>视频素材</button><button>音频素材</button>
+              <button class="on">角色</button><button>场景</button><button>道具</button><button>视频素材</button><button>音频素材</button><button>其他</button>
             </div>
-            <input class="search" placeholder="按名称搜索（搜索全部文件夹）" />
+            <select><option>按素材名称</option><option>按项目名称</option></select>
+            <input class="search" placeholder="搜索素材名 / 项目名（搜索全部文件夹）" />
             <select><option>最新创建</option><option>最近使用</option><option>已认证优先</option></select>
           </div>
 
@@ -219,6 +228,30 @@
               </div>
               <div class="tag-row"><span class="tag purple">道具</span><span class="tag on">导入</span></div>
             </div>
+            <div class="row">
+              <span class="asset-thumb video"></span>
+              <div>
+                <div class="row-title">办公室对话参考</div>
+                <p class="small">视频素材 · 来自项目《zzl》 · 含真人，待 SD2.0 人像认证</p>
+              </div>
+              <div class="tag-row"><span class="tag purple">视频</span><span class="tag warn">待认证</span><span class="tag on">导入</span></div>
+            </div>
+            <div class="row">
+              <span class="asset-thumb audio"></span>
+              <div>
+                <div class="row-title">医院夜班环境音</div>
+                <p class="small">音频素材 · 来自项目《怪医》 · 可用于分镜音频输入</p>
+              </div>
+              <div class="tag-row"><span class="tag purple">音频</span><span class="tag on">导入</span></div>
+            </div>
+            <div class="row">
+              <span class="asset-thumb other"></span>
+              <div>
+                <div class="row-title">世界观设定板</div>
+                <p class="small">其他 · 来自项目《国漫热血》 · 用于美术参考和提示词补充</p>
+              </div>
+              <div class="tag-row"><span class="tag purple">其他</span><span class="tag on">导入</span></div>
+            </div>
           </div>
         </div>
       </div>
@@ -226,6 +259,10 @@
       <aside class="panel">
         <div class="panel-head"><h2>这版只新增什么</h2><span class="tag on">轻改</span></div>
         <div class="panel-body">
+          <div class="side-card">
+            <h3>0. 上传先选分类</h3>
+            <p class="small">新增资产和制作页上传统一要求选择：角色、场景、道具、视频、音频、其他。分类决定素材进入哪个筛选项和后续可调用位置。</p>
+          </div>
           <div class="side-card">
             <h3>0. SD2.0 认证跟随素材</h3>
             <p class="small">不做单独认证入口。凡是含真人/虚拟人的图片或视频参考，在素材卡片下方直接显示“去认证 / 查看认证”。</p>
@@ -247,9 +284,9 @@
             <p class="small">把“本项目素材 / 上传新素材 / 最近使用”改成更明确的“项目资产 / 从资产库 / 上传”。</p>
           </div>
           <div class="flow">
-            <div class="flow-step"><span class="num">1</span><p class="small">资产库：含真人素材先进入 SD2.0 人像认证。</p></div>
-            <div class="flow-step"><span class="num">2</span><p class="small">新建项目：只导入已认证的人像资产，未认证项提示补认证。</p></div>
-            <div class="flow-step"><span class="num">3</span><p class="small">制作页：分镜调用前检查认证状态。</p></div>
+            <div class="flow-step"><span class="num">1</span><p class="small">上传：先选素材分类，可选择关联项目。</p></div>
+            <div class="flow-step"><span class="num">2</span><p class="small">检索：用户可按分类找素材，也可按项目名召回该项目沉淀素材。</p></div>
+            <div class="flow-step"><span class="num">3</span><p class="small">调用：含真人素材生成前检查认证状态。</p></div>
           </div>
         </div>
       </aside>
@@ -277,10 +314,22 @@
             <h3>先空着，制作时再补</h3>
             <p class="small">适合只有剧本或分镜，还没准备美术资产的项目。</p>
           </div>
-          <div class="choice">
-            <h3>上传本项目资产</h3>
-            <p class="small">仅用于当前项目，后续可选择沉淀回资产库。</p>
-          </div>
+            <div class="choice">
+              <h3>上传本项目资产</h3>
+              <p class="small">仅用于当前项目，后续可选择沉淀回资产库。</p>
+              <div class="upload-form">
+                <div class="small">上传前选择分类</div>
+                <div class="category-grid">
+                  <div class="category-card on"><b>角色</b><p class="small">人物/虚拟人</p></div>
+                  <div class="category-card"><b>场景</b><p class="small">环境/空间</p></div>
+                  <div class="category-card"><b>道具</b><p class="small">物品/文件</p></div>
+                  <div class="category-card"><b>视频</b><p class="small">参考视频</p></div>
+                  <div class="category-card"><b>音频</b><p class="small">对白/音效</p></div>
+                  <div class="category-card"><b>其他</b><p class="small">设定/资料</p></div>
+                </div>
+                <div class="drop-large">上传文件后进入当前项目资产</div>
+              </div>
+            </div>
           <div class="actions">
             <button>上一步</button><button class="primary">创建项目</button>
           </div>
@@ -318,7 +367,7 @@
             </div>
             <input style="width:100%; margin-bottom:12px;" placeholder="搜索项目资产" />
             <div class="tag-row" style="margin-bottom:12px;">
-              <span class="tag on">全部</span><span class="tag">角色</span><span class="tag">场景</span><span class="tag">道具</span>
+              <span class="tag on">全部</span><span class="tag">角色</span><span class="tag">场景</span><span class="tag">道具</span><span class="tag">视频</span><span class="tag">音频</span><span class="tag">其他</span>
             </div>
             <div class="asset-grid">
               <div class="asset-card">
