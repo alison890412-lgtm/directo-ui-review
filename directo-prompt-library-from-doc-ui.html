@@ -67,6 +67,11 @@
     .kv-row { display:grid; grid-template-columns:88px 1fr; gap:12px; align-items:start; }
     .kv-row label { color:var(--faint); font-size:13px; }
     .copybox { background:var(--panel3); border:1px solid var(--line); border-radius:var(--radius); padding:12px; color:#e8edf2; line-height:1.62; white-space:pre-wrap; min-height:110px; }
+    .editbox { width:100%; min-height:118px; background:var(--panel3); border:1px solid var(--line); border-radius:var(--radius); padding:12px; color:#e8edf2; line-height:1.62; resize:vertical; outline:none; }
+    .edit-grid { display:grid; gap:12px; }
+    .edit-row label { display:block; color:var(--faint); font-size:13px; margin-bottom:6px; }
+    .custom-note { border:1px solid rgba(246,184,63,.38); background:rgba(246,184,63,.08); color:#ffe7b0; border-radius:var(--radius); padding:10px 12px; font-size:13px; line-height:1.5; margin-top:12px; }
+    .danger { border-color:rgba(239,68,68,.52); color:#ffb4b4; background:rgba(239,68,68,.08); }
     .negative { color:#ffd4d4; }
     .actions { display:flex; gap:10px; flex-wrap:wrap; }
     .pill-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
@@ -137,11 +142,27 @@
       ["three", "三维", "CGI、UE5、定格、低多边形"],
       ["common", "通用提示词", "骨架、角色一致性、动态、负向"]
     ];
-    let state = { cat:"all", query:"", selected:DATA[0], tab:"project" };
+    const DEFAULT_DATA = JSON.parse(JSON.stringify(DATA));
+    let customMap = JSON.parse(localStorage.getItem("directo_style_custom_map") || "{}");
+    let state = { cat:"all", query:"", selected:DATA[0], tab:"project", editing:false };
 
     const catName = key => (CATS.find(c => c[0] === key) || [,""])[1];
     const $ = sel => document.querySelector(sel);
     function copyText(text) { navigator.clipboard?.writeText(text); }
+    function originalOf(number) { return DEFAULT_DATA.find(item => item.number === number); }
+    function effective(item) {
+      const custom = customMap[item.number] || {};
+      return {...item, ...custom, negative:{...(item.negative || {}), ...(custom.negative || {})}};
+    }
+    function isCustomized(item) { return Boolean(customMap[item.number]); }
+    function saveCustom(number, next) {
+      customMap[number] = next;
+      localStorage.setItem("directo_style_custom_map", JSON.stringify(customMap));
+    }
+    function resetCustom(number) {
+      delete customMap[number];
+      localStorage.setItem("directo_style_custom_map", JSON.stringify(customMap));
+    }
     function textOf(item) {
       return [item.name,item.en,item.usage,item.representative,item.light,item.color,item.texture,item.concise,item.negative?.cn,item.negative?.en].filter(Boolean).join(" ");
     }
@@ -169,16 +190,18 @@
     }
     function card(item) {
       const img = item.image ? `<img src="${item.image}" alt="${item.name}参考图">` : `<div class="placeholder">${item.number}</div>`;
+      const display = effective(item);
       return `<article class="card ${state.selected === item ? "active" : ""}" data-id="${item.number}">
         <div class="thumb">${img}<span class="badge">${catName(item.cat)}</span></div>
         <div class="card-body">
-          <div class="card-title"><div><b>${item.name}</b><div class="en">${item.en || item.number}</div></div><span class="tag">${item.number}</span></div>
+          <div class="card-title"><div><b>${display.name}</b><div class="en">${display.en || item.number}</div></div><span class="tag">${item.number}</span></div>
           <div class="tags">
             <span class="tag on">${item.source || "通用"}</span>
+            ${isCustomized(item) ? `<span class="tag warn">已定制</span>` : ""}
             ${item.representative ? `<span class="tag warn">${item.representative}</span>` : ""}
           </div>
-          <p class="small">${item.usage || "项目视觉风格"}</p>
-          <p class="small">${item.light || item.concise}</p>
+          <p class="small">${display.usage || "项目视觉风格"}</p>
+          <p class="small">${display.light || display.concise}</p>
         </div>
       </article>`;
     }
@@ -194,19 +217,34 @@
       });
     }
     function detailText(item) {
-      if (state.tab === "negative") return `EN: ${item.negative?.en || ""}\n中：${item.negative?.cn || ""}`;
-      if (state.tab === "fields") return `适用题材：${item.usage || ""}\n代表风格：${item.representative || ""}\n光线基调：${item.light || ""}\n色彩倾向：${item.color || ""}\n画质质感：${item.texture || ""}`;
-      if (state.tab === "usage") return item.note || "";
-      return item.concise || "";
+      const display = effective(item);
+      if (state.tab === "negative") return `EN: ${display.negative?.en || ""}\n中：${display.negative?.cn || ""}`;
+      if (state.tab === "fields") return `适用题材：${display.usage || ""}\n代表风格：${display.representative || ""}\n光线基调：${display.light || ""}\n色彩倾向：${display.color || ""}\n画质质感：${display.texture || ""}`;
+      if (state.tab === "usage") return display.note || "";
+      return display.concise || "";
+    }
+    function editForm(item) {
+      const display = effective(item);
+      return `<div class="edit-grid">
+        <div class="custom-note">正在编辑「${display.name}」的个人定制版。保存后会覆盖复制和加入项目风格包时使用的提示词；系统默认模板仍可一键恢复。</div>
+        <div class="edit-row"><label>项目精简提示词</label><textarea class="editbox" id="editConcise">${escapeHtml(display.concise || "")}</textarea></div>
+        <div class="edit-row"><label>光线基调</label><textarea class="editbox" id="editLight" style="min-height:72px;">${escapeHtml(display.light || "")}</textarea></div>
+        <div class="edit-row"><label>色彩倾向</label><textarea class="editbox" id="editColor" style="min-height:72px;">${escapeHtml(display.color || "")}</textarea></div>
+        <div class="edit-row"><label>画质质感</label><textarea class="editbox" id="editTexture" style="min-height:72px;">${escapeHtml(display.texture || "")}</textarea></div>
+        <div class="edit-row"><label>负向约束（中文）</label><textarea class="editbox" id="editNegativeCn" style="min-height:86px;">${escapeHtml(display.negative?.cn || "")}</textarea></div>
+        <div class="edit-row"><label>负向约束（英文）</label><textarea class="editbox" id="editNegativeEn" style="min-height:86px;">${escapeHtml(display.negative?.en || "")}</textarea></div>
+        <div class="edit-row"><label>使用说明</label><textarea class="editbox" id="editNote" style="min-height:86px;">${escapeHtml(display.note || "")}</textarea></div>
+      </div>`;
     }
     function renderDetail() {
       const item = state.selected || filtered()[0] || DATA[0];
+      const display = effective(item);
       const hero = item.image ? `<img src="${item.image}" alt="${item.name}参考图">` : `<div class="placeholder">${item.number}</div>`;
       const text = detailText(item);
       $("#detail").innerHTML = `
         <div class="hero-img">${hero}<span class="badge">参考图</span></div>
         <div class="panel-head">
-          <div><h2>${item.name}</h2><p class="small">${item.en || item.number} · ${catName(item.cat)}</p></div>
+          <div><h2>${display.name}</h2><p class="small">${display.en || item.number} · ${catName(item.cat)}${isCustomized(item) ? " · 已个人定制" : " · 系统默认"}</p></div>
           <span class="tag on">${item.number}</span>
         </div>
         <div class="detail-section">
@@ -214,7 +252,10 @@
             <button class="primary" id="copyCurrent">复制当前提示词</button>
             <button id="copyAll">复制完整模板</button>
             <button class="soft">加入项目风格包</button>
+            ${state.editing ? `<button class="primary" id="saveCustom">保存定制</button><button id="cancelEdit">取消编辑</button>` : `<button id="editStyle">编辑定制</button>`}
+            <button class="danger" id="resetFactory">恢复出厂设置</button>
           </div>
+          ${isCustomized(item) ? `<div class="custom-note">当前风格已使用个人定制版。恢复出厂设置后，将回到系统内置提示词。</div>` : ""}
           <div class="pill-tabs">
             <button class="${state.tab === "project" ? "active" : ""}" data-tab="project">项目精简模块</button>
             <button class="${state.tab === "fields" ? "active" : ""}" data-tab="fields">字段详情</button>
@@ -223,19 +264,41 @@
           </div>
         </div>
         <div class="detail-section">
-          <div class="copybox ${state.tab === "negative" ? "negative" : ""}">${escapeHtml(text)}</div>
+          ${state.editing ? editForm(item) : `<div class="copybox ${state.tab === "negative" ? "negative" : ""}">${escapeHtml(text)}</div>`}
         </div>
         <div class="detail-section">
           <div class="kv">
-            <div class="kv-row"><label>光线</label><p>${item.light || "按项目设定补充"}</p></div>
-            <div class="kv-row"><label>色彩</label><p>${item.color || "按项目设定补充"}</p></div>
-            <div class="kv-row"><label>质感</label><p>${item.texture || "按项目设定补充"}</p></div>
-            <div class="kv-row"><label>负向</label><p>${item.negative?.cn || "按需追加"}</p></div>
+            <div class="kv-row"><label>光线</label><p>${display.light || "按项目设定补充"}</p></div>
+            <div class="kv-row"><label>色彩</label><p>${display.color || "按项目设定补充"}</p></div>
+            <div class="kv-row"><label>质感</label><p>${display.texture || "按项目设定补充"}</p></div>
+            <div class="kv-row"><label>负向</label><p>${display.negative?.cn || "按需追加"}</p></div>
           </div>
         </div>`;
-      document.querySelectorAll("[data-tab]").forEach(el => el.onclick = () => { state.tab = el.dataset.tab; renderDetail(); });
+      document.querySelectorAll("[data-tab]").forEach(el => el.onclick = () => { state.tab = el.dataset.tab; state.editing = false; renderDetail(); });
       $("#copyCurrent").onclick = () => copyText(text);
-      $("#copyAll").onclick = () => copyText(`【${item.name}】\n${item.concise || ""}\n\n【负向】\nEN: ${item.negative?.en || ""}\n中：${item.negative?.cn || ""}`);
+      $("#copyAll").onclick = () => copyText(`【${display.name}】\n${display.concise || ""}\n\n【光线】${display.light || ""}\n【色彩】${display.color || ""}\n【质感】${display.texture || ""}\n\n【负向】\nEN: ${display.negative?.en || ""}\n中：${display.negative?.cn || ""}`);
+      const editBtn = $("#editStyle");
+      if (editBtn) editBtn.onclick = () => { state.editing = true; state.tab = "project"; renderDetail(); };
+      const cancelBtn = $("#cancelEdit");
+      if (cancelBtn) cancelBtn.onclick = () => { state.editing = false; renderDetail(); };
+      const saveBtn = $("#saveCustom");
+      if (saveBtn) saveBtn.onclick = () => {
+        saveCustom(item.number, {
+          concise: $("#editConcise").value,
+          light: $("#editLight").value,
+          color: $("#editColor").value,
+          texture: $("#editTexture").value,
+          negative: { cn: $("#editNegativeCn").value, en: $("#editNegativeEn").value },
+          note: $("#editNote").value
+        });
+        state.editing = false;
+        render();
+      };
+      $("#resetFactory").onclick = () => {
+        resetCustom(item.number);
+        state.editing = false;
+        render();
+      };
     }
     function escapeHtml(str) {
       return String(str || "").replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
